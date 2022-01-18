@@ -10,6 +10,14 @@ function Album() {
     const [all,setAll] = useState([]);
     const [datalist, setdatalist] = useState([])
     const [searchlist, setsearchlist] = useState([])
+   const [conditions,setConditions] =useState(false);
+   const [page,setPage] = useState(0);
+   const arr=[];
+
+  for(var i=1;i<=page;i++){
+      arr.push(i)
+  }
+
 
     useEffect(() => {
         getData()
@@ -21,26 +29,22 @@ function Album() {
 
 
     const GetAllData = async()=>{
-        const {data} = await axios.get("http://localhost:2345/all")
+        const {data} = await axios.get("http://localhost:2345/album/all")
         //const res = data.data;
-        console.log(data)
+        setAll(data)
+        console.log(data,"data")
+        setsearchlist(data)
     }
 
 
     const getData = async () => {
         const {data} = await axios.get(`http://localhost:2345/album?page=${prev}`)
         const bali = data.data.album;
-        console.log(bali)
+        const totalpages = data.data.totalPages;
+        setPage(totalpages)
         setdatalist(bali)
-        setsearchlist(bali)
-    }
-
-    const handlePrev = () => {
-        setPrev(p => p - 1)
-    }
-
-    const handleNext = () => {
-        setPrev(p => p + 1)
+        // console.log(bali,"newwedwfw");
+        // setsearchlist(bali)
     }
 
     const handleChange = (e) => {
@@ -49,7 +53,11 @@ function Album() {
 
 
     const handlesearchlist = () => {
-        const val = datalist.filter((e) => e.albumName.toLowerCase().includes(text.toLowerCase()))
+        if(text==""){
+            return
+        }
+        const val = all.filter((e) => e.albumName.toLowerCase().includes(text.toLowerCase()))
+        setConditions(true)
         setsearchlist(val)
         setText("")
     }
@@ -59,23 +67,23 @@ function Album() {
         const option=e.target.value;
             console.log(option)
               if(option=="sad"){
-             const updatedatalist = datalist.filter((ev)=>ev.genre==="sad" )
-              setsearchlist(updatedatalist)
+             const updatedatalist = all.filter((ev)=>ev.genre==="sad" )
+              setdatalist(updatedatalist)
               
               }
               if(option=="romantic"){
-                const updatedatalist = datalist.filter((ev)=>ev.genre==="romantic" )
-                 setsearchlist(updatedatalist)
+                const updatedatalist = all.filter((ev)=>ev.genre==="romantic" )
+                 setdatalist(updatedatalist)
                  
                  }
                  if(option=="pop"){
-                    const updatedatalist = datalist.filter((ev)=>ev.genre==="pop" )
-                     setsearchlist(updatedatalist)
+                    const updatedatalist = all.filter((ev)=>ev.genre==="pop" )
+                     setdatalist(updatedatalist)
                      
                      }
                      if(option=="rock"){
-                        const updatedatalist = datalist.filter((ev)=>ev.genre==="rock" )
-                         setsearchlist(updatedatalist)
+                        const updatedatalist = all.filter((ev)=>ev.genre==="rock" )
+                         setdatalist(updatedatalist)
                          
                          }
     
@@ -87,16 +95,23 @@ function Album() {
          
         const option=e.target.value;
         if(option==="newtoold"){
-         const updatedatalist =    [...datalist].sort((a,b)=>  +(b.year) - +(a.year))
-         setsearchlist(updatedatalist)
+         const updatedatalist =    [...all].sort((a,b)=>  +(b.year) - +(a.year))
+         setdatalist(updatedatalist)
         }
         if(option==="oldtonew"){
-         const updatedatalist =    [...datalist].sort((a,b)=>  +(a.year) - +(b.year))
-         setsearchlist(updatedatalist)
+         const updatedatalist =    [...all].sort((a,b)=>  +(a.year) - +(b.year))
+         setdatalist(updatedatalist)
         }      
      }
 
 
+     const handlePrev = () => {
+        setPrev(p => p - 1)
+    }
+
+    const handleNext = () => {
+        setPrev(p => p + 1)
+    }
     return (
         <>
             <div id="searchbox">
@@ -118,7 +133,10 @@ function Album() {
                 </select>
             </div>
             <div id="album">
-                {searchlist.map((e, i) => (
+                {
+                    conditions?
+                    <>
+                    {searchlist.map((e, i) => (
                     <div key={i} className="particulardiv">
                         <NavLink to={`/songs/${e._id}`} style={{ textDecoration: "none" }}>
                             <img id ="imageborder" src={e.pic} alt="picture" width="200px" height="200px"  />
@@ -130,11 +148,35 @@ function Album() {
                         </NavLink>
                     </div>
                 ))}
-
+                    </>
+                :<>
+                {datalist.map((e, i) => (
+                    <div key={i} className="particulardiv">
+                        <NavLink to={`/songs/${e._id}`} style={{ textDecoration: "none" }}>
+                            <img id ="imageborder" src={e.pic} alt="picture" width="200px" height="200px"  />
+                            <div id="content"> 
+                            <h2>{e.albumName}</h2>
+                            <p>Artist - {e.artistName}</p>
+                            <p>Year Of Release : {e.year}</p>
+                            </div>
+                        </NavLink>
+                    </div>
+                ))}
+</>
+}
             </div>
             <center id="btn">
-                <button onClick={handlePrev} disabled={prev == 1 ? true : false}>Prev</button>
-                <button onClick={handleNext} disabled={prev < 2 ? false : true}>Next</button>
+                {/* {
+                    arr.map((e,i)=>(
+                        <button key={i}onClick={()=>setPrev(e)}>{e}</button>
+                    ))
+                } */}
+
+                <button onClick={handlePrev} disabled={prev<=1?true:false} >Prev</button>
+                <button>{prev}/{page}</button>
+                {/* <button>{page}</button> */}
+                <button onClick={handleNext} disabled={prev>=4?true:false}>next</button>
+
             </center>
         </>
     )
